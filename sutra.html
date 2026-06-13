@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SUTRA – Smart Utility for Tactical Reference and Assistance</title>
+<style>
+/* ═══════════════════════════════════════
+   SCREEN STYLES
+═══════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --navy:       #0B1E3D;
+  --navy-mid:   #112848;
+  --navy-light: #1A3A5C;
+  --gold:       #C9A84C;
+  --gold-light: #E8C86A;
+  --gold-dim:   #8A6F32;
+  --khaki:      #D4C49A;
+  --red-alert:  #E84545;
+  --green-ok:   #3DBE7A;
+  --white:      #F4F0E8;
+  --grey:       #8A96A8;
+  --card-bg:    #0E2444;
+  --border:     rgba(201,168,76,0.25);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  background: linear-gradient(135deg, #060F1E 0%, var(--navy-mid) 100%);
+  border-bottom: 2px solid var(--gold);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.logo-emblem { width: 48px; height: 48px; flex-shrink: 0; }
+
+.header-text h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+.header-text p {
+  font-size: 0.62rem;
+  color: var(--khaki);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.badge {
+  background: rgba(201,168,76,0.12);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-light);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.btn-print {
+  background: transparent;
+  border: 1.5px solid var(--gold-dim);
+  color: var(--gold);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.btn-print:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+.btn-print.visible { display: flex; }
+
+/* ── MAIN LAYOUT ── */
+main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* ── THREAD SPINE ── */
+.thread-container { display: flex; flex-direction: column; }
+.thread-step { display: flex; gap: 16px; align-items: flex-start; }
+.thread-spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 32px; }
+.thread-node {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--navy-mid);
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.85rem;
+  color: var(--gold); flex-shrink: 0; transition: all 0.3s;
+}
+.thread-node.active { background: var(--gold); color: var(--navy); box-shadow: 0 0 16px rgba(201,168,76,0.5); }
+.thread-line { width: 2px; flex: 1; min-height: 24px; background: linear-gradient(to bottom, var(--gold-dim), transparent); margin: 4px 0; }
+.thread-content { flex: 1; padding-bottom: 28px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 10px;
+}
+.card-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px;
+}
+.step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.step-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 1.05rem; font-weight: 700;
+  color: var(--gold-light); letter-spacing: 0.05em; text-transform: uppercase;
+}
+
+/* ── INPUT ── */
+.fir-textarea {
+  width: 100%; min-height: 180px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  color: var(--white); font-family: 'Inter', sans-serif;
+  font-size: 0.95rem; line-height: 1.7; padding: 14px; resize: vertical; outline: none;
+  transition: border-color 0.2s;
+}
+.fir-textarea:focus { border-color: var(--gold); background: rgba(201,168,76,0.04); }
+.fir-textarea::placeholder { color: var(--grey); font-style: italic; }
+.input-hint { font-size: 0.75rem; color: var(--grey); margin-top: 8px; line-height: 1.5; }
+
+/* ── CASE META PILLS ── */
+.case-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.meta-pill {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 20px; border: 1px solid;
+}
+.pill-cognizable { background: rgba(232,69,69,0.12); border-color: rgba(232,69,69,0.35); color: #E87575; }
+.pill-non-cognizable { background: rgba(138,150,168,0.1); border-color: rgba(138,150,168,0.3); color: var(--grey); }
+.pill-bailable { background: rgba(61,190,122,0.1); border-color: rgba(61,190,122,0.3); color: var(--green-ok); }
+.pill-non-bailable { background: rgba(232,69,69,0.1); border-color: rgba(232,69,69,0.3); color: var(--red-alert); }
+.pill-type { background: rgba(201,168,76,0.1); border-color: var(--border); color: var(--gold); }
+
+/* ── BUTTONS ── */
+.btn-analyse {
+  margin-top: 16px; width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+  border: none; border-radius: 10px; color: var(--navy);
+  font-family: 'Rajdhani', sans-serif; font-size: 1.15rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.25);
+}
+.btn-analyse:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(201,168,76,0.35); }
+.btn-analyse:active { transform: translateY(0); }
+.btn-analyse:disabled {
+  background: linear-gradient(135deg, #4A3F24 0%, #2E2515 100%);
+  color: #7A6D4A; cursor: not-allowed; transform: none; box-shadow: none;
+}
+
+/* ── LOADING ── */
+.loading-block { display: none; text-align: center; padding: 32px 20px; }
+.loading-spinner {
+  width: 44px; height: 44px;
+  border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 600; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; }
+.loading-sub { font-size: 0.78rem; color: var(--grey); margin-top: 6px; }
+
+.result-panel { display: none; }
+
+/* ── SUMMARY ── */
+.summary-box {
+  background: rgba(201,168,76,0.07); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+  font-size: 0.88rem; color: var(--khaki); line-height: 1.7; margin-bottom: 12px;
+}
+
+/* ── IMPORTANT NOTES ── */
+.notes-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.note-item {
+  background: rgba(232,69,69,0.07); border: 1px solid rgba(232,69,69,0.2);
+  border-left: 3px solid var(--red-alert); border-radius: 6px;
+  padding: 8px 12px; font-size: 0.82rem; color: #E87575; line-height: 1.5;
+}
+
+/* ── SECTIONS ── */
+.sections-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.section-item {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.2);
+  border-left: 3px solid var(--gold); border-radius: 8px; padding: 12px 14px;
+}
+.section-item.primary { border-left-color: var(--red-alert); }
+.section-item.minor   { border-left-color: var(--grey); }
+
+.priority-tag {
+  display: inline-block; font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 3px; margin-bottom: 8px;
+}
+.tag-primary  { background: rgba(232,69,69,0.15); color: var(--red-alert); border: 1px solid rgba(232,69,69,0.3); }
+.tag-secondary{ background: rgba(201,168,76,0.12); color: var(--gold);      border: 1px solid var(--border); }
+.tag-minor    { background: rgba(138,150,168,0.1); color: var(--grey);      border: 1px solid rgba(138,150,168,0.2); }
+
+.section-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+.section-code {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 500;
+  color: var(--gold); background: rgba(201,168,76,0.1); padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+}
+.section-item.primary .section-code { color: var(--red-alert); background: rgba(232,69,69,0.1); }
+.section-name { font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 600; color: var(--white); }
+.section-law  { font-size: 0.7rem; color: var(--gold-dim); margin-bottom: 4px; font-style: italic; }
+.section-old  { font-size: 0.7rem; color: var(--grey); margin-bottom: 6px; }
+.section-punishment { font-size: 0.75rem; color: var(--red-alert); margin-bottom: 6px; font-weight: 500; }
+.section-desc { font-size: 0.82rem; color: var(--khaki); line-height: 1.6; }
+
+/* ── CHECKLIST ── */
+.checklist { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.checklist-phase { margin-bottom: 4px; }
+.phase-label {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-dim);
+  padding: 10px 0 6px; border-bottom: 1px solid rgba(201,168,76,0.1); margin-bottom: 8px;
+}
+
+.check-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 12px; background: rgba(255,255,255,0.025); border-radius: 7px;
+  cursor: pointer; transition: background 0.15s; border: 1px solid transparent;
+}
+.check-item:hover { background: rgba(201,168,76,0.06); }
+.check-item.done  { opacity: 0.55; }
+.check-item.done .check-text { text-decoration: line-through; }
+
+.check-box {
+  width: 22px; height: 22px; border: 2px solid var(--gold-dim); border-radius: 5px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  margin-top: 1px; transition: all 0.15s; background: transparent;
+}
+.check-item.done .check-box { background: var(--green-ok); border-color: var(--green-ok); }
+.check-tick { display: none; color: white; font-size: 0.75rem; font-weight: 700; }
+.check-item.done .check-tick { display: block; }
+.check-text { font-size: 0.88rem; color: var(--white); line-height: 1.55; flex: 1; }
+.check-urgent {
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--red-alert); background: rgba(232,69,69,0.1);
+  border: 1px solid rgba(232,69,69,0.25); padding: 2px 6px; border-radius: 3px;
+  white-space: nowrap; margin-top: 3px; display: inline-block;
+}
+
+/* ── PROGRESS ── */
+.progress-info { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.progress-bar-wrap { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(to right, var(--gold-dim), var(--green-ok)); border-radius: 2px; transition: width 0.3s; }
+.progress-text  { font-size: 0.75rem; color: var(--grey); }
+.progress-count { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--gold); }
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  background: rgba(232,69,69,0.06); border: 1px solid rgba(232,69,69,0.2);
+  border-radius: 8px; padding: 12px 14px; font-size: 0.75rem; color: #E87575;
+  line-height: 1.6; margin-top: 10px; display: flex; gap: 8px;
+}
+
+/* ── ERROR ── */
+.error-box {
+  background: rgba(232,69,69,0.08); border: 1px solid rgba(232,69,69,0.3);
+  border-radius: 8px; padding: 14px; color: #E87575; font-size: 0.85rem;
+  line-height: 1.6; display: none; margin-top: 12px; gap: 8px;
+}
+
+/* ── NEW CASE BUTTON ── */
+.btn-new {
+  width: 100%; padding: 12px; margin-top: 12px;
+  background: transparent; border: 1.5px solid var(--border); border-radius: 8px;
+  color: var(--gold); font-family: 'Rajdhani', sans-serif; font-size: 1rem;
+  font-weight: 600; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s;
+}
+.btn-new:hover { background: rgba(201,168,76,0.07); border-color: var(--gold); }
+
+/* ════════════════════════════════════════
+   PRINT STYLES
+════════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 18mm 16mm 18mm 20mm; }
+
+  body { background: white !important; color: #111 !important; font-size: 10pt; }
+
+  /* Hide interactive elements */
+  header, .btn-analyse, .btn-new, .btn-print,
+  .fir-textarea, .input-hint, .loading-block,
+  .check-box, .check-tick, .disclaimer,
+  .thread-spine, .progress-bar-wrap, .progress-info,
+  #step1, #errorBox { display: none !important; }
+
+  main { padding: 0 !important; max-width: 100% !important; }
+
+  /* Print header */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    border-bottom: 2.5pt solid #8B6914;
+    padding-bottom: 10pt;
+    margin-bottom: 14pt;
+  }
+  .print-header h1 { font-size: 18pt; font-weight: 900; color: #8B6914; letter-spacing: 0.1em; }
+  .print-header h2 { font-size: 8pt; color: #555; letter-spacing: 0.15em; text-transform: uppercase; }
+  .print-header .print-meta { font-size: 8pt; color: #444; margin-top: 6pt; }
+  .print-header .print-divider { height: 1pt; background: #ddd; margin: 6pt 0; }
+
+  /* Cards become simple boxes */
+  .card {
+    background: white !important; border: 1pt solid #ccc !important;
+    border-radius: 4pt !important; padding: 10pt !important; margin-top: 8pt !important;
+    page-break-inside: avoid;
+  }
+
+  .card-label { color: #8B6914 !important; font-size: 7pt !important; }
+
+  .thread-step { display: block !important; }
+  .thread-content { padding-bottom: 0 !important; }
+
+  .step-title { color: #222 !important; font-size: 11pt !important; margin-bottom: 4pt; display: block; }
+
+  /* Summary */
+  .summary-box { background: #FAFAF5 !important; border: 1pt solid #ddd !important; color: #222 !important; font-size: 9.5pt !important; padding: 8pt !important; }
+
+  /* Meta pills */
+  .meta-pill { border: 1pt solid #999 !important; color: #333 !important; background: #f5f5f5 !important; font-size: 7pt !important; }
+
+  /* Sections */
+  .section-item { border: 1pt solid #ccc !important; background: white !important; padding: 8pt !important; margin-bottom: 6pt; page-break-inside: avoid; }
+  .section-item.primary  { border-left: 3pt solid #CC3333 !important; }
+  .section-item.secondary{ border-left: 3pt solid #8B6914 !important; }
+  .section-item.minor    { border-left: 3pt solid #999 !important; }
+  .section-code  { background: #f0f0f0 !important; color: #333 !important; font-size: 8pt !important; }
+  .section-name  { color: #111 !important; font-size: 10pt !important; }
+  .section-law   { color: #666 !important; }
+  .section-old   { color: #888 !important; }
+  .section-punishment { color: #AA2222 !important; }
+  .section-desc  { color: #333 !important; font-size: 9pt !important; }
+  .priority-tag  { border: 1pt solid #999 !important; color: #333 !important; background: #f0f0f0 !important; font-size: 7pt !important; }
+
+  /* Checklist */
+  .phase-label { color: #8B6914 !important; border-bottom: 0.5pt solid #ddd !important; font-size: 8pt !important; }
+  .check-item {
+    background: white !important; border: none !important; padding: 4pt 0 !important;
+    border-bottom: 0.5pt solid #eee !important; cursor: default !important;
+    display: flex !important; gap: 8pt !important;
+  }
+  .check-text { color: #222 !important; font-size: 9pt !important; }
+  .check-urgent { color: #CC3333 !important; background: #FFF0F0 !important; border: 0.5pt solid #FFAAAA !important; font-size: 7pt !important; }
+  .check-print-box {
+    display: inline-block !important;
+    width: 10pt; height: 10pt;
+    border: 1pt solid #666;
+    border-radius: 2pt;
+    flex-shrink: 0;
+    margin-top: 1pt;
+  }
+
+  .note-item { background: #FFF8F8 !important; border-color: #FFCCCC !important; color: #AA2222 !important; font-size: 9pt !important; }
+
+  /* Result panels become visible */
+  .result-panel { display: block !important; }
+
+  /* Print footer */
+  .print-footer { display: block !important; margin-top: 16pt; border-top: 1pt solid #ccc; padding-top: 8pt; font-size: 7pt; color: #888; text-align: center; }
+}
+
+/* Print elements hidden on screen */
+.print-header  { display: none; }
+.print-footer  { display: none; }
+.check-print-box { display: none; }
+
+@media (max-width: 520px) {
+  .header-text h1 { font-size: 1.4rem; }
+  .card { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── PRINT HEADER (only shows when printing) ── -->
+<div class="print-header">
+  <h1>SUTRA</h1>
+  <h2>Smart Utility for Tactical Reference &amp; Assistance &nbsp;|&nbsp; Kerala Police</h2>
+  <div class="print-divider"></div>
+  <div class="print-meta">
+    Case Analysis Report &nbsp;|&nbsp; Generated: <span id="printDate"></span>
+    &nbsp;|&nbsp; <strong>CONFIDENTIAL – FOR OFFICIAL USE ONLY</strong>
+  </div>
+  <div class="print-divider"></div>
+  <div class="print-meta" style="font-style:italic" id="printStatement"></div>
+</div>
+
+<!-- ── SCREEN HEADER ── -->
+<header>
+  <svg class="logo-emblem" viewBox="0 0 48 48" fill="none">
+    <circle cx="24" cy="24" r="22" stroke="#C9A84C" stroke-width="2"/>
+    <circle cx="24" cy="24" r="17" stroke="#C9A84C" stroke-width="1" stroke-dasharray="2 3"/>
+    <polygon points="24,8 27,19 38,19 29,26 32,37 24,30 16,37 19,26 10,19 21,19" fill="#C9A84C" opacity="0.9"/>
+    <circle cx="24" cy="24" r="3" fill="#0B1E3D" stroke="#C9A84C" stroke-width="1.5"/>
+  </svg>
+  <div class="header-text">
+    <h1>SUTRA</h1>
+    <p>Smart Utility for Tactical Reference &amp; Assistance</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn-print" id="printBtn" onclick="printReport()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print Report
+    </button>
+    <div class="badge">Kerala Police</div>
+  </div>
+</header>
+
+<main>
+<div class="thread-container">
+
+  <!-- ── STEP 1: INPUT ── -->
+  <div class="thread-step" id="step1">
+    <div class="thread-spine">
+      <div class="thread-node active" id="node1">1</div>
+      <div class="thread-line"></div>
+    </div>
+    <div class="thread-content">
+      <div class="step-header"><span class="step-title">Enter First Information Statement</span></div>
+      <div class="card">
+        <div class="card-label">Complaint / FIS Details</div>
+        <textarea class="fir-textarea" id="firInput"
+          placeholder="Describe the incident in your own words...&#10;&#10;Example: On 12/06/2026 at around 9 PM, the complainant states that the accused Raju entered her house without permission and threatened her with a knife demanding money. He also slapped her causing injury to her cheek. Neighbours witnessed the incident."></textarea>
+        <div class="input-hint">
+          📝 Write the complaint as told by the victim or witness. Include: what happened, when, where, who was involved, any weapons used, injuries, witnesses.
+        </div>
+        <div class="error-box" id="errorBox">
+          <span>⚠️</span><span id="errorMsg">Something went wrong. Please try again.</span>
+        </div>
+        <button class="btn-analyse" id="analyseBtn" onclick="analyseCase()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Analyse &amp; Suggest Sections
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: ANALYSIS RESULT ── -->
+  <div class="thread-step">
+    <div class="thread-spine">
+      <div class="thread-node" id="node2">2</div>
+      <div class="thread-line"></div>
+    </div>
+    <div class="thread-content">
+      <div class="step-header"><span class="step-title">AI Legal Analysis</span></div>
+
+      <!-- Loading -->
+      <div class="card loading-block" id="loadingBlock">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Analysing Statement…</div>
+        <div class="loading-sub">Matching applicable sections from BNS, BNSS and all Indian laws</div>
+      </div>
+
+      <!-- Summary Result -->
+      <div class="card result-panel" id="summaryPanel">
+        <div class="card-label">Case Summary &amp; Classification</div>
+        <div class="case-meta" id="caseMeta"></div>
+        <div class="summary-box" id="caseSummaryText"></div>
+        <div class="notes-list" id="importantNotes"></div>
+        <div class="disclaimer">
+          <span>⚠️</span>
+          <span>AI-generated reference only. Always verify sections with your supervising officer or legal cell before registering FIR. Laws shown: BNS 2023, BNSS 2023, BSA 2023 &amp; applicable special acts.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: SECTIONS ── -->
+  <div class="thread-step">
+    <div class="thread-spine">
+      <div class="thread-node" id="node3">3</div>
+      <div class="thread-line"></div>
+    </div>
+    <div class="thread-content">
+      <div class="step-header"><span class="step-title">Applicable Legal Sections</span></div>
+      <div class="card result-panel" id="sectionsPanel">
+        <div class="card-label">Suggested Charges &amp; Provisions</div>
+        <div class="sections-grid" id="sectionsGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: CHECKLIST ── -->
+  <div class="thread-step">
+    <div class="thread-spine">
+      <div class="thread-node" id="node4">4</div>
+      <div class="thread-line" style="background:transparent"></div>
+    </div>
+    <div class="thread-content">
+      <div class="step-header"><span class="step-title">Duty Checklist</span></div>
+      <div class="card result-panel" id="checklistPanel">
+        <div class="card-label">Procedures &amp; Officer Duties</div>
+        <div class="progress-info">
+          <span class="progress-text">Tap items to mark complete</span>
+          <span class="progress-count" id="progressCount">0 / 0</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="checklist" id="checklistContainer" style="margin-top:16px"></div>
+        <button class="btn-new" onclick="resetApp()">＋ New Case Analysis</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- ── PRINT FOOTER ── -->
+<div class="print-footer">
+  SUTRA – Smart Utility for Tactical Reference &amp; Assistance &nbsp;|&nbsp; Kerala Police &nbsp;|&nbsp;
+  This document is generated by an AI assistant. Verify all legal provisions before official use. &nbsp;|&nbsp;
+  <span id="printFooterDate"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// Configuration
+// ═══════════════════════════════════════════
+
+// When running via server.js, the API call goes to local server.
+// When opening the file directly (file://), it falls back to a helpful message.
+const API_ENDPOINT = window.location.protocol === 'file:'
+  ? null   // file:// mode — will show setup instructions
+  : '/analyse'; // server mode
+
+// ═══════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════
+let checkItems = [];
+let doneItems  = new Set();
+let lastStatement = '';
+
+// ═══════════════════════════════════════════
+// Main Analysis
+// ═══════════════════════════════════════════
+async function analyseCase() {
+  const statement = document.getElementById('firInput').value.trim();
+
+  if (statement.length < 30) {
+    showError('Please enter more details about the incident (at least a few sentences).');
+    return;
+  }
+
+  if (!API_ENDPOINT) {
+    showError('⚠️ SUTRA is running as a local file. Please run it through the server:\n1. Open Terminal / Command Prompt\n2. Type: node server.js\n3. Open browser at: http://localhost:3000');
+    return;
+  }
+
+  hideError();
+  lastStatement = statement;
+  setLoading(true);
+
+  try {
+    const response = await fetch(API_ENDPOINT, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ statement }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error || `Server error ${response.status}`);
+    }
+
+    setLoading(false);
+    renderResults(data);
+
+  } catch(err) {
+    setLoading(false);
+    showError('Error: ' + (err.message || 'Could not connect to SUTRA server. Make sure server.js is running.'));
+  }
+}
+
+// ═══════════════════════════════════════════
+// Render Results
+// ═══════════════════════════════════════════
+function renderResults(data) {
+  ['node2','node3','node4'].forEach(id => document.getElementById(id).classList.add('active'));
+
+  // ── Case Meta Pills ──
+  const meta = document.getElementById('caseMeta');
+  meta.innerHTML = '';
+  if (data.offence_type) addPill(meta, data.offence_type, 'pill-type');
+  addPill(meta, data.cognizable ? 'Cognizable' : 'Non-Cognizable',
+    data.cognizable ? 'pill-cognizable' : 'pill-non-cognizable');
+  addPill(meta, data.bailable ? 'Bailable' : 'Non-Bailable',
+    data.bailable ? 'pill-bailable' : 'pill-non-bailable');
+
+  // ── Summary ──
+  document.getElementById('caseSummaryText').textContent = data.summary || '';
+
+  // ── Important Notes ──
+  const notesEl = document.getElementById('importantNotes');
+  notesEl.innerHTML = '';
+  (data.important_notes || []).forEach(note => {
+    const d = document.createElement('div');
+    d.className = 'note-item';
+    d.textContent = '⚠ ' + note;
+    notesEl.appendChild(d);
+  });
+
+  show('summaryPanel');
+
+  // ── Sections ──
+  const grid = document.getElementById('sectionsGrid');
+  grid.innerHTML = '';
+  (data.sections || []).forEach(sec => {
+    const div = document.createElement('div');
+    div.className = `section-item ${sec.priority || 'secondary'}`;
+    const tagClass = sec.priority === 'primary' ? 'tag-primary' : sec.priority === 'minor' ? 'tag-minor' : 'tag-secondary';
+    const tagLabel = sec.priority === 'primary' ? '● Primary Charge' : sec.priority === 'minor' ? '○ Minor / Procedural' : '◐ Secondary Charge';
+    div.innerHTML = `
+      <span class="priority-tag ${tagClass}">${esc(tagLabel)}</span>
+      <div class="section-header">
+        <span class="section-code">${esc(sec.code)}</span>
+        <span class="section-name">${esc(sec.name)}</span>
+      </div>
+      <div class="section-law">${esc(sec.law || '')}</div>
+      ${sec.old_ref  ? `<div class="section-old">Old reference: ${esc(sec.old_ref)}</div>` : ''}
+      ${sec.punishment ? `<div class="section-punishment">⚖ Punishment: ${esc(sec.punishment)}</div>` : ''}
+      <div class="section-desc">${esc(sec.description)}</div>
+    `;
+    grid.appendChild(div);
+  });
+  show('sectionsPanel');
+
+  // ── Checklist ──
+  checkItems = [];
+  doneItems  = new Set();
+  const container = document.getElementById('checklistContainer');
+  container.innerHTML = '';
+
+  (data.checklist || []).forEach(phase => {
+    const phaseDiv = document.createElement('div');
+    phaseDiv.className = 'checklist-phase';
+    phaseDiv.innerHTML = `<div class="phase-label">${esc(phase.phase)}</div>`;
+
+    (phase.items || []).forEach(item => {
+      const idx = checkItems.length;
+      checkItems.push(item.task);
+
+      const row = document.createElement('div');
+      row.className = 'check-item';
+      row.id = `chk-${idx}`;
+      row.onclick = () => toggleCheck(idx);
+      row.innerHTML = `
+        <div class="check-box"><span class="check-tick">✓</span></div>
+        <div class="check-print-box"></div>
+        <div style="flex:1">
+          <div class="check-text">${esc(item.task)}</div>
+          ${item.urgent ? '<span class="check-urgent">⚡ Urgent</span>' : ''}
+        </div>
+      `;
+      phaseDiv.appendChild(row);
+    });
+    container.appendChild(phaseDiv);
+  });
+
+  updateProgress();
+  show('checklistPanel');
+
+  // Show print button
+  document.getElementById('printBtn').classList.add('visible');
+
+  // Disable input area
+  document.getElementById('analyseBtn').disabled = true;
+  document.getElementById('firInput').disabled   = true;
+
+  // Set print date
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })
+    + ' at ' + now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('printDate').textContent = dateStr;
+  document.getElementById('printFooterDate').textContent = dateStr;
+  document.getElementById('printStatement').textContent = 'Statement: "' + lastStatement.substring(0, 180) + (lastStatement.length > 180 ? '…' : '') + '"';
+
+  setTimeout(() => {
+    document.getElementById('summaryPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+// ═══════════════════════════════════════════
+// Print
+// ═══════════════════════════════════════════
+function printReport() {
+  window.print();
+}
+
+// ═══════════════════════════════════════════
+// Checklist
+// ═══════════════════════════════════════════
+function toggleCheck(idx) {
+  const el = document.getElementById(`chk-${idx}`);
+  if (doneItems.has(idx)) { doneItems.delete(idx); el.classList.remove('done'); }
+  else                    { doneItems.add(idx);    el.classList.add('done'); }
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = checkItems.length, done = doneItems.size;
+  document.getElementById('progressCount').textContent = `${done} / ${total}`;
+  document.getElementById('progressBar').style.width   = total > 0 ? `${(done/total)*100}%` : '0%';
+}
+
+// ═══════════════════════════════════════════
+// UI Helpers
+// ═══════════════════════════════════════════
+function setLoading(on) {
+  const lb  = document.getElementById('loadingBlock');
+  const btn = document.getElementById('analyseBtn');
+  lb.style.display  = on ? 'block' : 'none';
+  btn.disabled      = on;
+  if (on) document.getElementById('node2').classList.add('active');
+}
+
+function show(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'block';
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  document.getElementById('errorMsg').textContent = msg;
+  box.style.display = 'flex';
+}
+
+function hideError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+function addPill(parent, text, cls) {
+  const sp = document.createElement('span');
+  sp.className = 'meta-pill ' + cls;
+  sp.textContent = text;
+  parent.appendChild(sp);
+}
+
+function esc(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function resetApp() {
+  ['node2','node3','node4'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['loadingBlock','summaryPanel','sectionsPanel','checklistPanel'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('firInput').value    = '';
+  document.getElementById('firInput').disabled = false;
+  document.getElementById('analyseBtn').disabled = false;
+  document.getElementById('printBtn').classList.remove('visible');
+  hideError();
+  checkItems = []; doneItems = new Set();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
